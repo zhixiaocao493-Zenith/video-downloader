@@ -1,0 +1,36 @@
+name: Video Downloader
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "输入 YouTube 视频链接"
+        required: true
+        type: string
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install yt-dlp
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install -U yt-dlp
+
+      - name: Download video
+        run: |
+          mkdir -p downloads
+          yt-dlp \
+            -f "bv*+ba/b" \
+            --merge-output-format mp4 \
+            -o "downloads/%(title)s.%(ext)s" \
+            "${{ inputs.url }}"
+
+      - name: Upload video
+        uses: actions/upload-artifact@v4
+        with:
+          name: downloaded-video
+          path: downloads/
+          retention-days: 3
